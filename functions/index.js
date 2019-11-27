@@ -110,7 +110,7 @@ app.post('/signup', (request, response) => {
         return response.status(400).json(errors);
     }
 
-    // authenication
+    // authenication and assigning token
     let token;
     let userId;
     db.doc(`/users/${newUser.handle}`).get()
@@ -142,6 +142,49 @@ app.post('/signup', (request, response) => {
             console.error(err);
             if (err.code === 'auth/email-already-in-use') {
                 return response.status(400).json({ email: 'Email is already in use' });
+            } else {
+                return response.status(500).json({ error: err.code });
+            }
+        });
+});
+
+// login route
+app.post('/login', (request, response) => {
+    const user = {
+        email: request.body.email,
+        password: request.body.password
+    };
+
+    // validation for login
+    let errors = {};
+
+    // email validation
+    if (isEmpty(user.email)) {
+        errors.email = 'Must not be empty';
+    }
+
+    // password validation
+    if (isEmpty(user.password)) {
+        errors.password = 'Must not be empty';
+    }
+
+    // only proceed if errors object is empty, otherwise return error in json
+    if (Object.keys(errors).length > 0) {
+        return response.status(400).json(errors);
+    }
+
+    // login user when there's no error
+    firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+        .then(data => {
+            return data.user.getIdToken();
+        })
+        .then(token => {
+            return response.json({ token });
+        })
+        .catch(err => {
+            console.error(err);
+            if (err.code === 'auth/wrong-password') {
+                return response.status(403).json({ general: 'Wrong credentials, please try again.' })
             } else {
                 return response.status(500).json({ error: err.code });
             }
