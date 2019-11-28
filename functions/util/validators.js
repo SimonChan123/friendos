@@ -39,11 +39,6 @@ exports.validateSignUpData = (data) => {
         errors.confirmPassword = 'Passwords must match';
     }
 
-    // only proceed if errors object is empty, otherwise return error in json
-    // if (Object.keys(errors).length > 0) {
-    //     return response.status(400).json(errors);
-    // }
-
     return {
         errors,
         valid: Object.keys(errors).length === 0 ? true : false
@@ -63,11 +58,6 @@ exports.validateLoginData = (data) => {
     if (isEmpty(user.password)) {
         errors.password = 'Must not be empty';
     }
-
-    // only proceed if errors object is empty, otherwise return error in json
-    // if (Object.keys(errors).length > 0) {
-    //     return response.status(400).json(errors);
-    // }
 
     return {
         errors,
