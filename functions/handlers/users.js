@@ -4,8 +4,9 @@ const firebaseConfig = require('../util/config');
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
 
-const { validateSignUpData, validateLoginData } = require('../util/validators');
+const { validateSignUpData, validateLoginData, reduceUserDetails } = require('../util/validators');
 
+// sign users up
 exports.signup = (request, response) => {
     const newUser = {
         email: request.body.email,
@@ -61,6 +62,7 @@ exports.signup = (request, response) => {
         });
 };
 
+// log the user in
 exports.login = (request, response) => {
     const user = {
         email: request.body.email,
@@ -92,6 +94,44 @@ exports.login = (request, response) => {
         });
 };
 
+// add user details
+exports.addUserDetails = (request, response) => {
+    let userDetails = reduceUserDetails(request.body);
+
+    db.doc(`/users/${request.user.handle}`).update(userDetails)
+        .then(() => {
+            return response.json({ message: 'Details added successfully' });
+        })
+        .catch((err) => {
+            console.error(err);
+            return response.status(500).json({ error: err.code });
+        });
+};
+
+// get own User details
+exports.getAuthenticatedUser = (request, response) => {
+    let userData = {};
+    db.doc(`/users/${request.user.handle}`).get()
+        .then((doc) => {
+            if (doc.exists) {
+                userData.credentials = doc.data();
+                return db.collection('likes').where('userHandle', '==', request.user.handle).get();
+            }
+        })
+        .then((data) => {
+            userData.likes = [];
+            data.forEach((doc) => {
+                userData.likes.push(doc.data());
+            });
+            return response.json( userData );
+        })
+        .catch((err) => {
+            console.error(err);
+            return response.status(500).json({ error: err.code });
+        });
+};
+
+// upload profile image for user
 exports.uploadImage = (request, response) => {
     const BusBoy = require('busboy');
     const path = require('path');
@@ -107,9 +147,6 @@ exports.uploadImage = (request, response) => {
         if (mimetype !== 'image/jpeg' && mimetype !== 'image/png') {
             return res.status(400).json({ error: 'Wrong file type submitted' });
         }
-        console.log(fieldname);
-        console.log(filename);
-        console.log(mimetype);
 
         // get extension of image file
         const imageExtension = filename.split('.')[filename.split('.').length - 1];
