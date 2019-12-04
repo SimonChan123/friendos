@@ -18,7 +18,7 @@ exports.getAllPosts = (request, response) => {
         })
         .catch((err) => {
             console.error(err);
-            response.status(500).json({ error: err.code });
+            return response.status(500).json({ error: err.code });
         });
 };
 
@@ -45,7 +45,7 @@ exports.postOnePost = (request, response) => {
         })
         .catch((err) => {
             console.error(err);
-            response.status(500).json({ error: 'something went wrong' });
+            return response.status(500).json({ error: 'something went wrong' });
         });
 };
 
@@ -72,7 +72,7 @@ exports.getPost = (request, response) => {
         })
         .catch((err) => {
             console.error(err);
-            response.status(500).json({ error: err.code });
+            return response.status(500).json({ error: err.code });
         });
 };
 
@@ -106,7 +106,7 @@ exports.commentOnPost = (request, response) => {
         })
         .catch((err) => {
             console.error(err);
-            response.status(500).json({ error: 'Something went wrong!' });
+            return response.status(500).json({ error: 'Something went wrong!' });
         });
 };
 
@@ -148,7 +148,7 @@ exports.likePost = (request, response) => {
         })
         .catch((err) => {
             console.error(err);
-            response.status(500).json({ error: err.code });
+            return response.status(500).json({ error: err.code });
         });
 };
 
@@ -187,6 +187,30 @@ exports.unlikePost = (request, response) => {
         })
         .catch((err) => {
             console.error(err);
-            response.status(500).json({ error: err.code });
+            return response.status(500).json({ error: err.code });
+        });
+};
+
+// deleting a post
+exports.deletePost = (request, response) => {
+    const document = db.doc(`/posts/${request.params.postId}`);
+    document.get()
+        .then((doc) => {
+            if (!doc.exists) {
+                return response.status(404).json({ error: 'Post not found' });
+            }
+
+            if (doc.data().userHandle !== request.user.handle) {
+                return response.status(403).json({ error: 'Unauthorized' });
+            } else {
+                return document.delete();
+            }
+        })
+        .then(() => {
+            return response.json({ message: 'Post deleted successfully' });
+        })
+        .catch((err) => {
+            console.error(err);
+            return response.status(500).json({ error: err.code });
         });
 };
