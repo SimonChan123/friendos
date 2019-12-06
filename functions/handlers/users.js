@@ -107,6 +107,41 @@ exports.addUserDetails = (request, response) => {
         });
 };
 
+// get any user details
+exports.getUserDetails = (request, response) => {
+    let userData = {};
+    db.doc(`/users/${request.params.handle}`).get()
+        .then((doc) => {
+            if (doc.exists) {
+                userData.user = doc.data();
+                return db.collection('posts').where('userHandle', '==', request.params.handle)
+                    .orderBy('createdAt', 'desc')
+                    .get();
+            } else {
+                return response.status(404).json({ error: 'User not found' });
+            }
+        })
+        .then((data) => {
+            userData.posts = [];
+            data.forEach((doc) => {
+                userData.posts.push({
+                    body: doc.data().body,
+                    createdAt: doc.data().body,
+                    userHandle: doc.data().userHandle,
+                    userImage: doc.data().userImage,
+                    likeCount: doc.data().likeCount,
+                    commentCount: doc.data().commentCount,
+                    postId: doc.id
+                })
+            });
+            return response.json(userData);
+        })
+        .catch((err => {
+            console.error(err);
+            return response.status(500).json({ error: err.code });
+        }))
+};
+
 // get own User details
 exports.getAuthenticatedUser = (request, response) => {
     let userData = {};
@@ -122,7 +157,23 @@ exports.getAuthenticatedUser = (request, response) => {
             data.forEach((doc) => {
                 userData.likes.push(doc.data());
             });
-            return response.json( userData );
+            return db.collection('notifications').where('recipient', '==', request.user.handle)
+                .orderBy('createdAt', 'desc').limit(10).get();
+        })
+        .then(data => {
+            userData.notifications = [];
+            data.forEach(doc => {
+                userData.notifications.push({
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    createdAt: doc.data().createdAt,
+                    postId: doc.data().postId,
+                    type: doc.data().type,
+                    read: doc.data().read,
+                    notificationsId: doc.id
+                })
+            });
+            return response.json(userData);
         })
         .catch((err) => {
             console.error(err);
@@ -176,4 +227,21 @@ exports.uploadImage = (request, response) => {
         });
     });
     busboy.end(request.rawBody);
+};
+
+// post to make notifications read
+exports.markNotificationsRead = (request, response) => {
+    let batch = db.batch();
+    request.body.forEach((notificationId) => {
+        const notification = db.doc(`/notifications/${notificationId}`);
+        batch.update(notification, { read: true });
+    });
+    batch.commit()
+        .then(() => {
+            return response.json({ messsage: 'Notifications marked read' });
+        })
+        .catch(err => {
+            console.error(err);
+            return response.status(500).json({ error: err.code });
+        });
 };
