@@ -11,7 +11,10 @@ exports.getAllPosts = (request, response) => {
                     postID: doc.id,
                     body: doc.data().body,
                     userHandle: doc.data().userHandle,
-                    createdAt: doc.data().createdAt
+                    createdAt: doc.data().createdAt,
+                    commentCount: doc.data().commentCount,
+                    likeCount: doc.data().likeCount,
+                    userImage: doc.data().userImage
                 });
             });
             return response.json(posts);
@@ -79,7 +82,7 @@ exports.getPost = (request, response) => {
 // Comment on a post
 exports.commentOnPost = (request, response) => {
     if (request.body.body.trim() === '') {
-        return response.status(400).json({ error: 'Must not be empty' });
+        return response.status(400).json({ comment: 'Must not be empty' });
     }
 
     const newComment = {
