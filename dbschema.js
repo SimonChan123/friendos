@@ -23,7 +23,7 @@ let db = {
     comments: [
       {
         userHandle: 'user',
-        postId: 'asdfasfasf',
+        postID: 'asdfasfasf',
         body: 'some content',
         createdAt: '2019-11-23T02:06:44.362Z'
       }

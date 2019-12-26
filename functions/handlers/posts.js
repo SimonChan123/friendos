@@ -43,7 +43,7 @@ exports.postOnePost = (request, response) => {
         .add(newPost)
         .then((doc) => {
             const responsePost = newPost;
-            responsePost.postId = doc.id;
+            responsePost.postID = doc.id;
             response.json(responsePost);
         })
         .catch((err) => {
@@ -55,16 +55,16 @@ exports.postOnePost = (request, response) => {
 // get the post (along with its comments)
 exports.getPost = (request, response) => {
     let postData = {};
-    db.doc(`/posts/${request.params.postId}`).get()
+    db.doc(`/posts/${request.params.postID}`).get()
         .then((doc) => {
             if (!doc.exists) {
                 return response.status(404).json({ error: 'Post not found' });
             }
             postData = doc.data();
-            postData.postId = doc.id;
+            postData.postID = doc.id;
             return db.collection('comments')
                 .orderBy('createdAt', 'desc')
-                .where('postId', '==', request.params.postId).get();
+                .where('postID', '==', request.params.postID).get();
         })
         .then((data) => {
             postData.comments = [];
@@ -88,13 +88,13 @@ exports.commentOnPost = (request, response) => {
     const newComment = {
         body: request.body.body,
         createdAt: new Date().toISOString(),
-        postId: request.params.postId,
+        postID: request.params.postID,
         userHandle: request.user.handle,
         userImage: request.user.imageUrl
     };
     console.log(newComment);
 
-    db.doc(`/posts/${request.params.postId}`).get()
+    db.doc(`/posts/${request.params.postID}`).get()
         .then((doc) => {
             if (!doc.exists) {
                 return response.status(404).json({ error: 'Post not found' });
@@ -116,9 +116,9 @@ exports.commentOnPost = (request, response) => {
 // like a post
 exports.likePost = (request, response) => {
     const likeDocument = db.collection('likes').where('userHandle', '==', request.user.handle)
-        .where('postId', '==', request.params.postId).limit(1);
+        .where('postID', '==', request.params.postID).limit(1);
 
-    const postDocument = db.doc(`/posts/${request.params.postId}`);
+    const postDocument = db.doc(`/posts/${request.params.postID}`);
 
     let postData;
 
@@ -126,7 +126,7 @@ exports.likePost = (request, response) => {
         .then((doc) => {
             if (doc.exists) {
                 postData = doc.data();
-                postData.postId = doc.id;
+                postData.postID = doc.id;
                 return likeDocument.get();
             } else {
                 return response.status(404).json({ error: 'Post not found.' });
@@ -135,7 +135,7 @@ exports.likePost = (request, response) => {
         .then((data) => {
             if (data.empty) {
                 return db.collection('likes').add({
-                    postId: request.params.postId,
+                    postID: request.params.postID,
                     userHandle: request.user.handle
                 })
                 .then(() => {
@@ -158,9 +158,9 @@ exports.likePost = (request, response) => {
 // unlike a post
 exports.unlikePost = (request, response) => {
     const likeDocument = db.collection('likes').where('userHandle', '==', request.user.handle)
-        .where('postId', '==', request.params.postId).limit(1);
+        .where('postID', '==', request.params.postID).limit(1);
 
-    const postDocument = db.doc(`/posts/${request.params.postId}`);
+    const postDocument = db.doc(`/posts/${request.params.postID}`);
 
     let postData;
 
@@ -168,7 +168,7 @@ exports.unlikePost = (request, response) => {
         .then((doc) => {
             if (doc.exists) {
                 postData = doc.data();
-                postData.postId = doc.id;
+                postData.postID = doc.id;
                 return likeDocument.get();
             } else {
                 return response.status(404).json({ error: 'Post not found.' });
@@ -196,7 +196,7 @@ exports.unlikePost = (request, response) => {
 
 // deleting a post
 exports.deletePost = (request, response) => {
-    const document = db.doc(`/posts/${request.params.postId}`);
+    const document = db.doc(`/posts/${request.params.postID}`);
     document.get()
         .then((doc) => {
             if (!doc.exists) {

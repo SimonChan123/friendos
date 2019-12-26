@@ -127,7 +127,7 @@ exports.getUserDetails = (request, response) => {
                     userImage: doc.data().userImage,
                     likeCount: doc.data().likeCount,
                     commentCount: doc.data().commentCount,
-                    postId: doc.id
+                    postID: doc.id
                 })
             });
             return response.json(userData);
@@ -163,7 +163,7 @@ exports.getAuthenticatedUser = (request, response) => {
                     recipient: doc.data().recipient,
                     sender: doc.data().sender,
                     createdAt: doc.data().createdAt,
-                    postId: doc.data().postId,
+                    postID: doc.data().postID,
                     type: doc.data().type,
                     read: doc.data().read,
                     notificationsId: doc.id
